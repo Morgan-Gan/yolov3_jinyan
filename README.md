@@ -178,3 +178,54 @@ For business inquiries and professional support requests please visit us at http
 ## Contact
 
 **Issues should be raised directly in the repository.** For business inquiries or professional support requests please visit https://www.ultralytics.com or email Glenn Jocher at glenn.jocher@ultralytics.com. 
+
+
+
+################################# 比特大陆：模型量化  ###########################################
+## attention Bug
+1. 在比特大陆转换u/bmodel模型时，配置文件.cfg中的batch = 1
+2. 在比特大陆平台图片.JPG不能读出，必须转化成.jpg读出
+3. 在平台上运行算法，模型必须先加密
+3. 在比特大陆平台，多个model之间的名字不能一样INT8.model/INT8A.model
+
+
+## 制作mdb数据集
+convert_imageset --shuffle --resize_height=416 --resize_width=416 / 20210205jingdianmao_val.txt img_lmdb
+file:///Z:/common2/%E6%A8%A1%E5%9E%8B%E9%87%8F%E5%8C%96/%E6%A8%A1%E5%9E%8B%E9%87%8F%E5%8C%96_%E6%89%93%E7%94%B5%E8%AF%9D%E6%A8%A1%E5%9E%8B(YOLOV3).html
+
+
+################################# map平台测试工具  ###########################################
+Z:\common2\AI_Server\test_tool
+
+
+## 模型发布流程：
+1. 模型量化-in8  ——> 模型加密
+模型量化保存（-dump_dist）中间文件：
+calibration_use_pb  release --model darknet_model_bmnetd_test_fp32.prototxt --weights darknet_model_bmnetd.fp32umodel --iterations 50  -dump_dist=last.th --bitwidth TO_INT8
+
+模型量化加载（-load_dist)中间文件：
+calibration_use_pb  release --model darknet_model_bmnetd_test_fp32.prototxt --weights darknet_model_bmnetd.fp32umodel --iterations 1000  -load_dist=last.th --bitwidth TO_INT8
+
+
+2.
+模型路径：\\10.100.11.208\iot\AI版本发布\算法集成\bit\vehicle\vehicle_V1.2_20210225_encrypt 
+发布平台：Bitman
+应用场景：车辆检测相关
+
+修改点：
+存在问题：
+本地服务器无法正常测试，出现很多 多余的 目标框，设备端验证不存在该问题。
+配置文件：见model_cfg.json
+精确度指标：
+
+3.平台端实例
+ Z:\common2\技术文档\场景文档\确认OK
+4.检测流程
+Z:\likeliang\bitmain\bitmain_1209\bmnnsdk2-bm1684_v2.2.0\QK_AI_Box\external\aicore\core\object_detector
+
+5.阈值
+
+
+################################# 比特大陆测试数据  ###########################################
+Z:\ganhaiyang\Alg_Proj\2.2.0_20201117_042200\bmnnsdk2\bmnnsdk2-bm1684_v2.2.0\QK_AI_Box\external\aicore\sample_test\build\sample_object_detector
+

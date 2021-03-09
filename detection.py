@@ -131,28 +131,52 @@ def detect(save_img=False):
 
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
-                    if save_txt:  # Write to file
-                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                    # if save_txt:  # Write to file
+                    #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                    #     with open(save_path[:save_path.rfind('.')] + '.txt', 'a') as file:
+                    #         # only save person lebel
+                    #         if cls == 0 :
+                    #             file.write(('%g ' * 5 + '\n') % (cls , *xywh))  # label format         + 1 为静电帽，0为人
+                    save_map_txt = True
+                    if save_map_txt:                   # write map test txt file
                         with open(save_path[:save_path.rfind('.')] + '.txt', 'a') as file:
                             # only save person lebel
                             if cls == 0 :
-                                file.write(('%g ' * 5 + '\n') % (cls , *xywh))  # label format         + 1 为静电帽，0为人
+                                cls_name = "person"
+                                file.write(('%s ' + '%g ' * 5 + '\n') % (cls_name, conf , *xyxy))  # label format         + 1 为静电帽，0为人                       
+                            elif cls == 1 :
+                                cls_name = "ele_cap"
+                                file.write(('%s ' + '%g ' * 5 + '\n') % (cls_name, conf , *xyxy))  # label format         + 1 为静电帽，0为人 
+                            elif cls == 2 :
+                                cls_name = "protection_shoes"
+                                file.write(('%s ' + '%g ' * 5 + '\n') % (cls_name, conf , *xyxy))  # label format         + 1 为静电帽，0为人 
+                            elif cls == 3 :
+                                cls_name = "shoes"
+                                file.write(('%s ' + '%g ' * 5 + '\n') % (cls_name, conf , *xyxy))  # label format         + 1 为静电帽，0为人                       
 
-                    if save_img or view_img:  # Add bbox to image
+                    # if save_img or view_img:  # Add bbox to image
                         label = '%s %.2f' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)])
                         
                         # save only bbox images
-                        if det is not None and len(det)==1:
-                            image = im0[int(xyxy[1]) : int(xyxy[3]),
-                                    int(xyxy[0]) : int(xyxy[2])]
-                            cv2.imwrite(save_path, image)
-                        if det is not None and len(det)>1:
-                            # save_path = 'output_many/' + save_path.split('/')[1].split('.')[0] + "_{}".format(i) +".jpg"
-                            for i in range(len(det)):
-                                image = im0[int(xyxy[1]) : int(xyxy[3]),
-                                        int(xyxy[0]) : int(xyxy[2])]
-                                cv2.imwrite(save_path, image)
+                        # if det is not None and len(det)==1:
+                            # image = im0[int(xyxy[1]) : int(xyxy[3]),
+                            #         int(xyxy[0]) : int(xyxy[2])]
+                            # cv2.imwrite(save_path, image)
+
+
+                            # ## 裁剪人肩下半身图片
+                            # image_shoes = im0[int(xyxy[3]) : im0.shape[0],
+                            #                         0      : im0.shape[1] ]
+                            # if image_shoes.size != 0:
+                            #     cv2.imwrite(save_path, image_shoes)
+     
+                        # if det is not None and len(det)>1:
+                        #     # save_path = 'output_many/' + save_path.split('/')[1].split('.')[0] + "_{}".format(i) +".jpg"
+                        #     for i in range(len(det)):
+                        #         image = im0[int(xyxy[1]) : int(xyxy[3]),
+                        #                 int(xyxy[0]) : int(xyxy[2])]
+                        #         cv2.imwrite(save_path, image)
 
 
 
@@ -165,21 +189,21 @@ def detect(save_img=False):
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
 
-            # # Save results (image with detections)
-            # if save_img:
-            #     if dataset.mode == 'images':
-            #         cv2.imwrite(save_path, im0)
-            #     else:
-            #         if vid_path != save_path:  # new video
-            #             vid_path = save_path
-            #             if isinstance(vid_writer, cv2.VideoWriter):
-            #                 vid_writer.release()  # release previous video writer
+            # Save results (image with detections)
+            if save_img:
+                if dataset.mode == 'images':
+                    cv2.imwrite(save_path, im0)
+                else:
+                    if vid_path != save_path:  # new video
+                        vid_path = save_path
+                        if isinstance(vid_writer, cv2.VideoWriter):
+                            vid_writer.release()  # release previous video writer
 
-            #             fps = vid_cap.get(cv2.CAP_PROP_FPS)
-            #             w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            #             h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            #             vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*opt.fourcc), fps, (w, h))
-            #         vid_writer.write(im0)
+                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*opt.fourcc), fps, (w, h))
+                    vid_writer.write(im0)
 
     if save_txt or save_img:
         print('Results saved to %s' % os.getcwd() + os.sep + out)
@@ -191,13 +215,13 @@ def detect(save_img=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-1cls.cfg', help='*.cfg path')
-    parser.add_argument('--names', type=str, default='data/coco.names', help='*.names path')
-    parser.add_argument('--weights', type=str, default='weights/person_should_V2.1_20200928.weights', help='weights path')
-    parser.add_argument('--source', type=str, default='data/samples', help='source')  # input file/folder, 0 for webcam Elec_Cap _person
-    parser.add_argument('--output', type=str, default='output', help='output folder')  # output folder
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-4cls.cfg', help='*.cfg path')  # weights/person_body_model/yolov3.cfg
+    parser.add_argument('--names', type=str, default='data/ele_cap_shoes.names', help='*.names path')
+    parser.add_argument('--weights', type=str, default='weights/best213_4cls.pt', help='weights path')  # weights/person_body_model/person_body_V1.2_20210119.weights
+    parser.add_argument('--source', type=str, default='/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap/origin_video_imgs/cap_shoes_person_should_new', help='source')  # /home/window_share/home/os/window_share/ganhaiyang/datasets/jingdianmao/20210205jingdianmao_val', 0 for webcam Elec_Cap _person
+    parser.add_argument('--output', type=str, default='/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap/origin_video_imgs/cap_shoes_person_should_new_out', help='output folder')  # output folder
     parser.add_argument('--img-size', type=int, default=512, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')          # 0.3
+    parser.add_argument('--conf-thres', type=float, default=0.1, help='object confidence threshold')          # 0.3
     parser.add_argument('--iou-thres', type=float, default=0.6, help='IOU threshold for NMS')                 # default=0.6
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
