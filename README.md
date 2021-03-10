@@ -229,3 +229,8 @@ Z:\likeliang\bitmain\bitmain_1209\bmnnsdk2-bm1684_v2.2.0\QK_AI_Box\external\aico
 ################################# 比特大陆测试数据  ###########################################
 Z:\ganhaiyang\Alg_Proj\2.2.0_20201117_042200\bmnnsdk2\bmnnsdk2-bm1684_v2.2.0\QK_AI_Box\external\aicore\sample_test\build\sample_object_detector
 
+模型发布：
+\\10.100.11.208\iot\AI版本发布\算法集成\bit\ele_cap_protection_shoes 
+
+模型备份：
+Z:\common2\模型发布\模型发布-bit\ele_clothes
