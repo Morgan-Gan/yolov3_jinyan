@@ -126,7 +126,22 @@ def detect(save_img=False):
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         with open(save_path[:save_path.rfind('.')] + '.txt', 'a') as file:
                             # file.write(('%g ' * 5 + '\n') % (cls, *xywh))  # normalized yolo label format
-                            file.write(('%g ' * 5 + '\n') % (cls, *xyxy))  # label format
+                            # file.write(('%g ' * 5 + '\n') % (cls, *xyxy))  # label format
+                            if cls == 0 :
+                                cls_name = "person"
+                                file.write(( '%g ' * 5 + '\n') % (cls,  *xywh))  # label format         + 1 为静电帽，0为人                       
+                            elif cls == 1 :
+                                # cls_name = "ele_cap"
+                                cls = 0
+                                file.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format         + 1 为静电帽，0为人 
+                            elif cls == 2 :                                    #"protection_shoes"
+                                file.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format         + 1 为静电帽，0为人 
+                            elif cls == 3 :
+                                cls = 2
+                            #     cls_name = "shoes"
+                                file.write(('%g ' * 5 + '\n') % (cls, *xywh))  # label format         + 1 为静电帽，0为人 
+                                # file.write(('%s ' + '%g ' * 5 + '\n') % (cls_name, conf , *xyxy))  # label format         + 1 为静电帽，0为人                       
+
 
 
                     if save_img or view_img:  # Add bbox to image
@@ -168,17 +183,17 @@ def detect(save_img=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3-4cls.cfg', help='*.cfg path')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3-4cls-leaky.cfg', help='*.cfg path')
     parser.add_argument('--names', type=str, default='data/ele_cap_shoes.names', help='*.names path')
-    parser.add_argument('--weights', type=str, default='weights/best.pt', help='weights path')
-    parser.add_argument('--source', type=str, default='data/test_should', help='source')  # input file/folder, 0 for webcam
-    parser.add_argument('--output', type=str, default='data/test_should_out', help='output folder')  # output folder
-    parser.add_argument('--img-size', type=int, default=512, help='inference size (pixels)')
+    parser.add_argument('--weights', type=str, default='weights/best_ele_cap_shoes.pt', help='weights path')
+    parser.add_argument('--source', type=str, default='/home/window_share/home/os/window_share/ganhaiyang/datasets/head_hand_foot/JPEGImages_person', help='source')  # input file/folder, 0 for webcam
+    parser.add_argument('--output', type=str, default='/home/window_share/home/os/window_share/ganhaiyang/datasets/head_hand_foot/images_out', help='output folder')  # output folder
+    parser.add_argument('--img-size', type=int, default=352, help='inference size (pixels)')                     # default=512
     parser.add_argument('--conf-thres', type=float, default=0.3, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.6, help='IOU threshold for NMS')
     parser.add_argument('--fourcc', type=str, default='mp4v', help='output video codec (verify ffmpeg support)')
     parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
-    parser.add_argument('--device', default='', help='device id (i.e. 0 or 0,1) or cpu')
+    parser.add_argument('--device', default='0', help='device id (i.e. 0 or 0,1) or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
     parser.add_argument('--save-txt', default=True, help='save results to *.txt')                        # action='store_true'
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class')

@@ -1,140 +1,112 @@
-# import os
-# import cv2
-# import pdb
-# path='/home/yuwentao/Downloads/zcsj2g2m4c-4/Database1'
-# #对每一张图片写xml文件
-# def process(file):
-#     pass
-# #读取指定路径下的txt格式yolo标注并读取对应图片信息
-# def read(path):
-#     files=os.listdir(path)
-#     for file in files:
-#         if(file.split('.')[-1]=='txt'):
-#             txt_path=os.path.join(path,file)
-#             pdb.set_trace()
-#             with open(txt_path,'r') as f:
-#                 a=f.readlines()
-#                 for line in a:
-#                     line=line.strip().split(' ')#去掉末尾空格
-#                     class_name=int(line[0])
-#                     yolo_xc=float(line[1])
-#                     yolo_yc=float(line[2])
-#                     yolo_w=float(line[3])
-#                     yolo_h=float(line[4])
-#
-#                 print(a)
-# read(path)
-# Script to convert yolo annotations to voc format
+from xml.dom.minidom import Document
 import os
-import xml.etree.cElementTree as ET
-from PIL import Image
-import pdb
-
-ANNOTATIONS_DIR_PREFIX = "/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap_protection_shoes_4cls/labels_val"
-
-DESTINATION_DIR = "/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap_protection_shoes_4cls/Annotations"
-
-CLASS_MAPPING = {
-    '0': 'person',
-    '1': 'ele_cap',
-    '2': 'protection_shoes',
-    '3': 'shoes',
-    # Add your remaining classes here.
-}
+import cv2
 
 
-def create_root(file_prefix, width, height):
-    root = ET.Element("annotations")
-    ET.SubElement(root, "folder").text = "VOC2007"
-    file_name=file_prefix.split('/')[-1]
-    ET.SubElement(root, "filename").text = "{}.jpg".format(file_name)
+def makexml(txtPath, xmlPath, picPath):  # txt所在文件夹路径，xml文件保存路径，图片所在文件夹路径
+    """此函数用于将yolo格式txt标注文件转换为voc格式xml标注文件
 
-    size = ET.SubElement(root, "size")
-    ET.SubElement(size, "width").text = str(width)
-    ET.SubElement(size, "height").text = str(height)
-    ET.SubElement(size, "depth").text = "3"
-    ET.SubElement(root, "segmented").text = "0"
-    return root
+    在自己的标注图片文件夹下建三个子文件夹，分别命名为picture、txt、xml
+    """
+    dic = {'0': "head",  # 创建字典用来对类型进行转换
+           '1': "hand",  # 此处的字典要与自己的classes.txt文件中的类对应，且顺序要一致
+           '2': "foot"
+           }
+    files = os.listdir(txtPath)
+    for i, name in enumerate(files):
+        xmlBuilder = Document()
+        annotation = xmlBuilder.createElement("annotation")  # 创建annotation标签
+        xmlBuilder.appendChild(annotation)
+        txtFile = open(txtPath + name)
+        txtList = txtFile.readlines()
+        img = cv2.imread(picPath + name[0:-4] + ".jpg")
+        Pheight, Pwidth, Pdepth = img.shape
+
+        folder = xmlBuilder.createElement("folder")  # folder标签
+        foldercontent = xmlBuilder.createTextNode("driving_annotation_dataset")
+        folder.appendChild(foldercontent)
+        annotation.appendChild(folder)  # folder标签结束
+
+        filename = xmlBuilder.createElement("filename")  # filename标签
+        filenamecontent = xmlBuilder.createTextNode(name[0:-4] + ".jpg")
+        filename.appendChild(filenamecontent)
+        annotation.appendChild(filename)  # filename标签结束
+
+        size = xmlBuilder.createElement("size")  # size标签
+        width = xmlBuilder.createElement("width")  # size子标签width
+        widthcontent = xmlBuilder.createTextNode(str(Pwidth))
+        width.appendChild(widthcontent)
+        size.appendChild(width)  # size子标签width结束
+
+        height = xmlBuilder.createElement("height")  # size子标签height
+        heightcontent = xmlBuilder.createTextNode(str(Pheight))
+        height.appendChild(heightcontent)
+        size.appendChild(height)  # size子标签height结束
+
+        depth = xmlBuilder.createElement("depth")  # size子标签depth
+        depthcontent = xmlBuilder.createTextNode(str(Pdepth))
+        depth.appendChild(depthcontent)
+        size.appendChild(depth)  # size子标签depth结束
+
+        annotation.appendChild(size)  # size标签结束
+
+        for j in txtList:
+            oneline = j.strip().split(" ")
+            object = xmlBuilder.createElement("object")  # object 标签
+            picname = xmlBuilder.createElement("name")  # name标签
+            namecontent = xmlBuilder.createTextNode(dic[oneline[0]])
+            picname.appendChild(namecontent)
+            object.appendChild(picname)  # name标签结束
+
+            pose = xmlBuilder.createElement("pose")  # pose标签
+            posecontent = xmlBuilder.createTextNode("Unspecified")
+            pose.appendChild(posecontent)
+            object.appendChild(pose)  # pose标签结束
+
+            truncated = xmlBuilder.createElement("truncated")  # truncated标签
+            truncatedContent = xmlBuilder.createTextNode("0")
+            truncated.appendChild(truncatedContent)
+            object.appendChild(truncated)  # truncated标签结束
+
+            difficult = xmlBuilder.createElement("difficult")  # difficult标签
+            difficultcontent = xmlBuilder.createTextNode("0")
+            difficult.appendChild(difficultcontent)
+            object.appendChild(difficult)  # difficult标签结束
+
+            bndbox = xmlBuilder.createElement("bndbox")  # bndbox标签
+            xmin = xmlBuilder.createElement("xmin")  # xmin标签
+            mathData = int(((float(oneline[1])) * Pwidth + 1) - (float(oneline[3])) * 0.5 * Pwidth)
+            xminContent = xmlBuilder.createTextNode(str(mathData))
+            xmin.appendChild(xminContent)
+            bndbox.appendChild(xmin)  # xmin标签结束
+
+            ymin = xmlBuilder.createElement("ymin")  # ymin标签
+            mathData = int(((float(oneline[2])) * Pheight + 1) - (float(oneline[4])) * 0.5 * Pheight)
+            yminContent = xmlBuilder.createTextNode(str(mathData))
+            ymin.appendChild(yminContent)
+            bndbox.appendChild(ymin)  # ymin标签结束
+
+            xmax = xmlBuilder.createElement("xmax")  # xmax标签
+            mathData = int(((float(oneline[1])) * Pwidth + 1) + (float(oneline[3])) * 0.5 * Pwidth)
+            xmaxContent = xmlBuilder.createTextNode(str(mathData))
+            xmax.appendChild(xmaxContent)
+            bndbox.appendChild(xmax)  # xmax标签结束
+
+            ymax = xmlBuilder.createElement("ymax")  # ymax标签
+            mathData = int(((float(oneline[2])) * Pheight + 1) + (float(oneline[4])) * 0.5 * Pheight)
+            ymaxContent = xmlBuilder.createTextNode(str(mathData))
+            ymax.appendChild(ymaxContent)
+            bndbox.appendChild(ymax)  # ymax标签结束
+
+            object.appendChild(bndbox)  # bndbox标签结束
+
+            annotation.appendChild(object)  # object标签结束
+
+        f = open(xmlPath + name[0:-4] + ".xml", 'w')
+        xmlBuilder.writexml(f, indent='\t', newl='\n', addindent='\t', encoding='utf-8')
+        f.close()
 
 
-def create_object_annotation(root, voc_labels):
-    for voc_label in voc_labels:
-        obj = ET.SubElement(root, "object")
-        ET.SubElement(obj, "name").text = voc_label[0]
-        ET.SubElement(obj, "pose").text = "Unspecified"
-        ET.SubElement(obj, "truncated").text = str(0)
-        ET.SubElement(obj, "difficult").text = str(0)
-        bbox = ET.SubElement(obj, "bndbox")
-        ET.SubElement(bbox, "xmin").text = str(voc_label[1])
-        ET.SubElement(bbox, "ymin").text = str(voc_label[2])
-        ET.SubElement(bbox, "xmax").text = str(voc_label[3])
-        ET.SubElement(bbox, "ymax").text = str(voc_label[4])
-    return root
+makexml("/home/window_share/home/os/window_share/ganhaiyang/datasets/head_hand_foot/sum_labels/", "/home/window_share/home/os/window_share/ganhaiyang/datasets/head_hand_foot/Annotations/",
+        "/home/window_share/home/os/window_share/ganhaiyang/datasets/head_hand_foot/JPEGImages_person/")  # txt所在文件夹路径，xml文件保存路径，图片所在文件夹路径
 
-
-def create_file(file_prefix, width, height, voc_labels):
-    root = create_root(file_prefix, width, height)
-    root = create_object_annotation(root, voc_labels)
-    tree = ET.ElementTree(root)
-    #pdb.set_trace()
-    file_name=file_prefix.split('/')[-1]
-    tree.write("{}/{}.xml".format(DESTINATION_DIR,file_name))
-
-
-def read_file(file_path):
-    #pdb.set_trace()
-    file_prefix = file_path.split(".txt")[0]
-    
-    # 注意图片格式有可能GPJ或者jpg
-    image_file_name = "{}.jpg".format(file_prefix).replace('/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap_protection_shoes_4cls/labels_val',\
-                                                          '/home/window_share/home/os/window_share/ganhaiyang/datasets/ele_cap_protection_shoes_4cls/images_val')
-    img = Image.open(image_file_name)
-    #print(img)
-
-    w, h = img.size
-    #prueba = "{}/{}".format("Database1", file_path)
-    prueba=file_path
-    #print(prueba)
-    with open(prueba) as file:
-        lines = file.readlines()
-        voc_labels = []
-        for line in lines:
-            voc = []
-            line = line.strip()
-            data = line.split()
-            voc.append(CLASS_MAPPING.get(data[0]))
-            bbox_width = float(data[3]) * w
-            bbox_height = float(data[4]) * h
-            center_x = float(data[1]) * w
-            center_y = float(data[2]) * h
-            voc.append(center_x - (bbox_width / 2))
-            voc.append(center_y - (bbox_height / 2))
-            voc.append(center_x + (bbox_width / 2))
-            voc.append(center_y + (bbox_height / 2))
-            voc_labels.append(voc)
-        create_file(file_prefix, w, h, voc_labels)
-    print("Processing complete for file: {}".format(file_path))
-
-
-def start():
-    if not os.path.exists(DESTINATION_DIR):
-        os.makedirs(DESTINATION_DIR)
-    for filename in os.listdir(ANNOTATIONS_DIR_PREFIX):
-        if filename.endswith('txt'):
-            #pdb.set_trace()
-            try:
-                # PathFileName = "{}/{}".format("Database1", filename)
-                # if os.stat(PathFileName).st_size > 0:
-                #     print("Si")
-                #     read_file(filename)
-                new_path=os.path.join(ANNOTATIONS_DIR_PREFIX,filename)
-                read_file(new_path)
-            except:
-                print("No")
-
-        else:
-            print("Skipping file: {}".format(filename))
-
-
-if __name__ == "__main__":
-    start()
